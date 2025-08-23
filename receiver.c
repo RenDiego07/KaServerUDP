@@ -120,7 +120,7 @@ void start_server( int port ){
 			pthread_mutex_unlock(&s->mx);
 			int response_seq = htonl(seq);
 			if (sendto(sock, &response_seq, sizeof(response_seq), 0,(struct sockaddr*)&client_addr, client_len) < 0){
-				perror("ACK FIN sendto");
+				perror("COULD NOT SEND MESSAGE\n");
 			}
 
 			continue; // NO BREAK. TAL VEZ PONER UN TIMEOUT PARA IDENTIFICAR PARA CERRAR EL SERVIDOR
@@ -239,7 +239,7 @@ void ipport_to_path(const struct sockaddr_in *cli, char *out, size_t n){
         char ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &cli->sin_addr, ip, sizeof(ip));
         unsigned short port = ntohs(cli->sin_port);
-        snprintf(out, n, "./files_received/%s_%hu.bin", ip, port);
+        snprintf(out, n, "./files_received/%s_%hu.txt", ip, port);
 
 }
 
@@ -251,7 +251,7 @@ session_t *get_or_create_session(const struct sockaddr_in *client){
 		if (sessions[i].in_use && same_peer(&sessions[i].peer, client)){
 			ret = &sessions[i];
 			pthread_mutex_unlock(&sessions_mx);
-			 return ret;
+			return ret;
 		}
 	}
 

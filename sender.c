@@ -66,12 +66,12 @@ void send_file ( char *server_address, int server_port, char *file) {
 		chunk_t chunk;
 		chunk.sequence_index = sequence_index;
 		chunk.bytes_read = bytes_read;
-		printf("indice %d se copiaron %d\n", chunk.sequence_index, chunk.bytes_read);
+		printf("INDEX %d BYTES SENT %d\n", chunk.sequence_index, chunk.bytes_read);
 		memcpy(chunk.buffer, buffer, bytes_read); // evita copiar bytes basura
 		int packet_size;
 		char *packet = pack_chunk(&chunk, &packet_size);
 		if( bytes_read == 0 ) {
-			printf("DEBERIA IMPRIMIRSE. NUMERO DE BYTES LEIDOS: %d\n", bytes_read);
+			printf("FINISHED READING THE FILE. AMOUNT OF BYTES READ: %d\n", bytes_read);
 			 if ( sendto(sock,packet,packet_size,0,(struct sockaddr*)&server_addr, sizeof(server_addr))<0 ){
                                 perror("COULD NOT SEND THE CHUNKS OF MESSAGE\n");
                                 exit(1);
@@ -134,9 +134,9 @@ void send_file ( char *server_address, int server_port, char *file) {
 		free(packet);
 		sequence_index++;
 		printf("BYTES READ : %d\n",bytes_read );
-		if ( bytes_read == 0 ) {
-			break;
-		}
+//		if ( bytes_read == 0 ) {
+//			break;
+//		}
 
 	}
 	printf("MESSAGE SENT\n");
