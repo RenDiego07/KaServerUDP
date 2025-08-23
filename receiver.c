@@ -78,7 +78,7 @@ void start_server( int port ){
 		if( !isChunkAlreadySaved ( chunks_received,len_chunks_array, seq )){
 
 			fwrite(packet + 8,1 ,size, fp);
-			printf("%s\n", packet+8);
+			//printf("%s\n", packet+8);
 			printf("DATA RECEIVED: secuence #: %d with %d bytes\n", seq, size);
 			int seq_1 = htonl(seq);
 

@@ -6,7 +6,7 @@
 #include "structs.h"
 #include <stddef.h>
 #include <sys/time.h>
-
+#define TRIES 7
 
 void send_file(char *server_address, int server_port, char *file);
 char *pack_chunk(chunk_t *chunk, int *out_size);
@@ -59,7 +59,7 @@ void send_file ( char *server_address, int server_port, char *file) {
 
 		int ack_received = 0;
 
-
+		int resend_times = 0;
 		while (!ack_received ) {
 
 			if ( sendto(sock,packet,packet_size,0,(struct sockaddr*)&server_addr, sizeof(server_addr))<0 ){
@@ -69,7 +69,7 @@ void send_file ( char *server_address, int server_port, char *file) {
 			}
 			struct timeval tv;
 			tv.tv_sec = 0;
-			tv.tv_usec = 999900;
+			tv.tv_usec = 500000;
 			fd_set readfds;
 			FD_ZERO(&readfds);
 			FD_SET(sock, &readfds);
@@ -77,6 +77,12 @@ void send_file ( char *server_address, int server_port, char *file) {
 			if ( retval == 0) {
 				printf("CHUNK WAS LOST AND THE SERVER DID NOT RESPOND ON TIME\n");
 				printf("Timeout, resending sequence:  %d\n", chunk.sequence_index);
+				resend_times++;
+				printf("times:  %d\n", resend_times);
+				if(resend_times > TRIES){
+					printf("EXCEED THE AMOUNT OF TRIES TO RESEND THE CHUNK OF DATA\n");
+					break;
+				}
 				continue;
 
 			}else if(retval > 0) {
