@@ -7,13 +7,26 @@
 #include <stddef.h>
 #include <sys/time.h>
 #define TRIES 7
-
+#include <pthread.h>
 void send_file(char *server_address, int server_port, char *file);
 char *pack_chunk(chunk_t *chunk, int *out_size);
+void *send_file_thread(void *p);
+typedef struct thread_args_s {
+        const char *ip;
+        int port;
+        const char *filename;
+}thread_args_t;
+
 int main (){
 	printf("SO FAR EVERYTHING IS FINE\n");
-
-	send_file("192.168.64.5", 8500, "./files_read/text.txt");
+	pthread_t t1, t2;
+	thread_args_t a1 = {"192.168.64.5", 8500, "./files_read/text.txt"};
+	thread_args_t a2 = {"192.168.64.5", 8500, "./files_read/text.txt"};
+	pthread_create(&t1, NULL, send_file_thread, &a1);
+	pthread_create(&t2, NULL, send_file_thread, &a2);
+	pthread_join(t1, NULL);
+	pthread_join(t2, NULL);
+	//send_file("192.168.64.5", 8500, "./files_read/text.txt");
 
 	return 0;
 
@@ -148,3 +161,9 @@ char *pack_chunk(chunk_t *chunk, int *out_size){
 	return packet;
 }
 
+
+void* send_file_thread(void *p) {
+	thread_args_t *a = (thread_args_t*)p;
+	send_file((char*)a->ip, a->port, (char*)a->filename);
+	return NULL;
+}
