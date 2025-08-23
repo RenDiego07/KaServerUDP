@@ -5,10 +5,13 @@
 #include <string.h>
 #include "structs.h"
 #include <stdbool.h>
+#include <stdint.h> 
 
 void start_server( int port );
 int *extend_memory ( int **array, size_t *length );
 bool isChunkAlreadySaved ( int *array, size_t length, int sequence);
+
+
 int main(){
 
 	printf("Everything's ok\n");
@@ -60,11 +63,16 @@ void start_server( int port ){
 			close(sock);
 			exit(1);
 		}
+
 		int seq, size;
 		memcpy(&seq, packet, 4);
 		memcpy(&size, packet+4, 4);
 		seq = ntohl(seq);
 		size = ntohl(size);
+		printf("NUMERO DE BYTES LEIDOS %d\n",size );
+		if( size == 0 ){
+			printf("LLEGAMOS AL FINAL DEL ARCHIVO SECUENCIA: %d\n",seq);
+		}
 		// {comprobamos primero si es que el array de chunks esta lleno}
 		if ( seq >= len_chunks_array ){
 			int *tmp = extend_memory(&chunks_received, &len_chunks_array);
@@ -78,8 +86,9 @@ void start_server( int port ){
 		if( !isChunkAlreadySaved ( chunks_received,len_chunks_array, seq )){
 
 			fwrite(packet + 8,1 ,size, fp);
-			//printf("%s\n", packet+8);
 			printf("DATA RECEIVED: secuence #: %d with %d bytes\n", seq, size);
+//			printf("%s\n", packet+8);
+
 			int seq_1 = htonl(seq);
 
 			if( (sendto(sock,&seq_1, sizeof(seq_1),0, (struct sockaddr*)&client_addr, client_len))<0){
@@ -95,8 +104,9 @@ void start_server( int port ){
 			}
 		}else{
 			printf("DUPLICATED CHUNK: %d. SKIPPED\n", seq);
+			continue;
 		}
-		index_chunk++;
+		//index_chunk++;
 
 	}
 	fclose(fp);
