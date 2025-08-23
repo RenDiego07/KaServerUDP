@@ -68,8 +68,8 @@ void send_file ( char *server_address, int server_port, char *file) {
 				exit(1);
 			}
 			struct timeval tv;
-			tv.tv_sec = 1;
-			tv.tv_usec = 0;
+			tv.tv_sec = 0;
+			tv.tv_usec = 999900;
 			fd_set readfds;
 			FD_ZERO(&readfds);
 			FD_SET(sock, &readfds);
@@ -92,6 +92,8 @@ void send_file ( char *server_address, int server_port, char *file) {
 				if(server_response_sequence == chunk.sequence_index){
 					ack_received = 1;
 					printf("CHUNK WAS RECEIVED SUCCESFULLY. SEQUENCE RECEIVED: %d\n",server_response_sequence );
+				}else if(chunk.sequence_index > server_response_sequence){
+					continue;
 				}else{
 					printf("INDEX_SEQUENCE RECEIVED: %d, EXPECTED %d\n", server_response_sequence, chunk.sequence_index);
 					printf("SENDING CHUNK AGAIN\n");

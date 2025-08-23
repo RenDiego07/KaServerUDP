@@ -81,7 +81,7 @@ void start_server( int port ){
 			printf("%s\n", packet+8);
 			printf("DATA RECEIVED: secuence #: %d with %d bytes\n", seq, size);
 			int seq_1 = htonl(seq);
-			sleep(4);
+
 			if( (sendto(sock,&seq_1, sizeof(seq_1),0, (struct sockaddr*)&client_addr, client_len))<0){
 				perror ("COULD NOT SEND TO CLIENT THE INDEX SEQUENCE \n");
 
