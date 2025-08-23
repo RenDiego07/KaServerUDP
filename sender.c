@@ -5,7 +5,7 @@
 #include <string.h>
 #include "structs.h"
 #include <stddef.h>
-
+#include <sys/time.h>
 
 
 void send_file(char *server_address, int server_port, char *file);
@@ -13,7 +13,6 @@ char *pack_chunk(chunk_t *chunk, int *out_size);
 int main (){
 	printf("SO FAR EVERYTHING IS FINE\n");
 
-	send_file("192.168.64.5", 8500, "./files_read/text.txt");
 	send_file("192.168.64.5", 8500, "./files_read/text.txt");
 
 	return 0;
@@ -61,19 +60,53 @@ void send_file ( char *server_address, int server_port, char *file) {
 		int ack_received = 0;
 
 
+		while (!ack_received ) {
 
-		if ( sendto(sock,packet,packet_size,0,(struct sockaddr*)&server_addr, sizeof(server_addr))<0 ){
+			if ( sendto(sock,packet,packet_size,0,(struct sockaddr*)&server_addr, sizeof(server_addr))<0 ){
 
-			perror("COULD NOT SEND THE CHUNKS OF MESSAGE\n");
-			exit(1);
+				perror("COULD NOT SEND THE CHUNKS OF MESSAGE\n");
+				exit(1);
+			}
+			struct timeval tv;
+			tv.tv_sec = 1;
+			tv.tv_usec = 0;
+			fd_set readfds;
+			FD_ZERO(&readfds);
+			FD_SET(sock, &readfds);
+			int retval = select(sock + 1, &readfds, NULL, NULL, &tv);
+			if ( retval == 0) {
+				printf("CHUNK WAS LOST AND THE SERVER DID NOT RESPOND ON TIME\n");
+				printf("Timeout, resending sequence:  %d\n", chunk.sequence_index);
+				continue;
+
+			}else if(retval > 0) {
+				char received_buffer[8];
+				int fd_server_response = recvfrom(sock, received_buffer, sizeof(received_buffer), 0, NULL, NULL);
+				if (fd_server_response < 0){
+					perror("ERROR AT CREATING FILE DESCRIPTOR\n");
+					continue;
+				}
+				int server_response_sequence;
+				memcpy(&server_response_sequence, received_buffer,4);
+				server_response_sequence = ntohl(server_response_sequence);
+				if(server_response_sequence == chunk.sequence_index){
+					ack_received = 1;
+					printf("CHUNK WAS RECEIVED SUCCESFULLY. SEQUENCE RECEIVED: %d\n",server_response_sequence );
+				}else{
+					printf("INDEX_SEQUENCE RECEIVED: %d, EXPECTED %d\n", server_response_sequence, chunk.sequence_index);
+					printf("SENDING CHUNK AGAIN\n");
+				}
+
+			}
 		}
 		free(packet);
 		sequence_index++;
+		printf("BYTES READ : %d\n",bytes_read );
 		if ( bytes_read == 0 ) {
 			break;
 		}
-	}
 
+	}
 	printf("MESSAGE SENT\n");
 	close(sock);
 }
