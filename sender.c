@@ -26,8 +26,8 @@ int main (){
 	pthread_create(&t2, NULL, send_file_thread, &a2);
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
-	//send_file("192.168.64.5", 8500, "./files_read/text.txt");
-
+//	send_file("192.168.64.5", 8500, "./files_read/text.txt");
+//	send_file("192.168.64.5", 8500, "./files_read/text.txt");
 	return 0;
 
 }

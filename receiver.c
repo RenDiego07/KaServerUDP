@@ -103,12 +103,12 @@ void start_server( int port ){
 		size = ntohl(size);
 		printf("NUMERO DE BYTES LEIDOS %d\n",size );
 		session_t *s = get_or_create_session(&client_addr);
-		
+
 		char ip[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &s->peer.sin_addr, ip, sizeof(ip));
 		printf("[CLIENT %s:%hu] BYTES=%d SEQ=%d\n",ip, ntohs(s->peer.sin_port), size, seq);
 
-		
+
 		if( size == 0 ){
 			printf("LLEGAMOS AL FINAL DEL ARCHIVO SECUENCIA: %d\n",seq);
 			pthread_mutex_lock(&s->mx);
@@ -122,7 +122,7 @@ void start_server( int port ){
 			if (sendto(sock, &response_seq, sizeof(response_seq), 0,(struct sockaddr*)&client_addr, client_len) < 0){
 				perror("ACK FIN sendto");
 			}
-			
+
 			continue; // NO BREAK. TAL VEZ PONER UN TIMEOUT PARA IDENTIFICAR PARA CERRAR EL SERVIDOR
 		}
 		// {comprobamos primero si es que el array de chunks esta lleno}
@@ -134,7 +134,6 @@ void start_server( int port ){
 		pthread_mutex_lock(&s->mx);
 		duplicated = isChunkAlreadySaved(s->chunks_received, s->count, seq);
 		pthread_mutex_unlock(&s->mx);
-		
 		// {comprobamos si es que el bloque no se haya repetido}
 
 		if( duplicated ){
@@ -160,12 +159,15 @@ void start_server( int port ){
 			}
 	
 		}
+		s->chunks_received[s->count++] = seq;
+		pthread_mutex_unlock(&s->mx);
 		int seq_1 = htonl(seq);
 		if( sendto(sock,&seq_1, sizeof(seq_1), 0, (struct sockaddr*)&client_addr, client_len)<0){
 			perror("COULD NOT SEND TO CLIEN THE INDEX SEQUENCE\n");
 		}else{
 			printf("THE SEQUENCE SENT BACK TO THE CLIENT : %d\n", seq);
 		}
+		
 		//if ( seq >= len_chunks_array ){
 		//	int *tmp = extend_memory(&chunks_received, &len_chunks_array);
 		//	if( !tmp ){							funciona solo con un cliente.
@@ -268,6 +270,9 @@ session_t *get_or_create_session(const struct sockaddr_in *client){
 				pthread_mutex_unlock(&sessions_mx);
 				return NULL;
 			}
+			for (size_t k = 0; k < sessions[i].len_chunks_array; ++k) {
+				sessions[i].chunks_received[k] = -1;
+			}
 			char path[256];
 			ipport_to_path(client, path, sizeof(path));
 			sessions[i].fp = fopen(path, "ab");
@@ -279,7 +284,9 @@ session_t *get_or_create_session(const struct sockaddr_in *client){
 
 			}
 			ret = &sessions[i];
-		}	break;
+			break;
+		}
+
 	}
 	pthread_mutex_unlock(&sessions_mx);
 	return ret;
