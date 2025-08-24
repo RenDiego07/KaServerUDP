@@ -20,8 +20,8 @@ typedef struct thread_args_s {
 int main (){
 	printf("SO FAR EVERYTHING IS FINE\n");
 	pthread_t t1, t2;
-	thread_args_t a1 = {"192.168.64.5", 8500, "./files_read/text.txt"};
-	thread_args_t a2 = {"192.168.64.5", 8500, "./files_read/text.txt"};
+	thread_args_t a1 = {"192.168.64.5", 8500, "./files_read/random.txt"};
+	thread_args_t a2 = {"192.168.64.5", 8500, "./files_read/random.txt"};
 	pthread_create(&t1, NULL, send_file_thread, &a1);
 	pthread_create(&t2, NULL, send_file_thread, &a2);
 	pthread_join(t1, NULL);
@@ -103,10 +103,10 @@ void send_file ( char *server_address, int server_port, char *file) {
 				printf("Timeout, resending sequence:  %d\n", chunk.sequence_index);
 				resend_times++;
 				printf("times:  %d\n", resend_times);
-				if(resend_times > TRIES){
-					printf("EXCEED THE AMOUNT OF TRIES TO RESEND THE CHUNK OF DATA\n");
-					break;
-				}
+				//if(resend_times > TRIES){
+				//	printf("EXCEED THE AMOUNT OF TRIES TO RESEND THE CHUNK OF DATA\n");
+				//	break;
+				//}
 				continue;
 
 			}else if(retval > 0) {
